@@ -1,40 +1,36 @@
-from collections import deque
+import heapq
 
 def solution(n, edge):
-    graph = [[] for _ in range(n+1)]
-    visited = [False] * (n+1)
     
-    # 인접리스트 만들기
-    for e in edge: 
-        # 양방향 그래프
-        graph[e[0]].append(e[1])
-        graph[e[1]].append(e[0])
+    def dijkstra(n, graph, start):
+        dist = [float('inf')] * (n + 1)
+        dist[start] = 0
+        queue = []
         
-    def bfs(s, graph):
-        max_dist = -1
-        count = 0
-        
-        # 시작 노드 예약
-        queue = deque()
-        queue.append((s, 0))
-        visited[s] = True
+        heapq.heappush(queue, (0, start))
         
         while queue:
-            # 방문
-            cur, dist = queue.popleft() # 현재 노드
+            curr_dist, curr_node = heapq.heappop(queue)
             
-            if max_dist == dist:
-                count += 1
-            if max_dist < dist:
-                max_dist = dist
-                count = 1
+            if dist[curr_node] < curr_dist:
+                continue
+            
+            for next_node, weight in graph[curr_node]:
+                cost = curr_dist + weight
                 
-            # (다음 노드) 예약
-            for nxt in graph[cur]:
-                if not visited[nxt]:
-                    queue.append((nxt, dist+1))
-                    visited[nxt] = True
+                if cost < dist[next_node]:
+                    dist[next_node] = cost
+                    heapq.heappush(queue, (cost, next_node))
+                    
+        return dist
+    
+    graph = [[] for _ in range(n+1)]
+    
+    for a, b in edge:
+        graph[a].append((b, 1))
+        graph[b].append((a, 1))
         
-        return count
-                
-    return bfs(1, graph) # 1번에서 시작
+    dist_table = dijkstra(n, graph, 1)
+    
+    max_node = max(dist_table[1:]) # 0번 인덱스 inf 제외
+    return dist_table[1:].count(max_node)
